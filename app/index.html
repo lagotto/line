@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Line</title>
+
+        <!-- build:css styles/main.css -->
+        <link rel="stylesheet" href="styles/style.css">
+        <!-- endbuild -->
+    </head>
+    <body>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+        <script src="bower_components/d3/d3.js"></script>
+        <script src="bower_components/jquery/dist/jquery.js"></script>
+        <script src="scripts/sample_data.js"></script>
+
+        <!-- build:js(app) scripts/line_chart.js -->
+        <script src="bower_components/d3-tip/index.js"></script>
+        <script src="scripts/line_chart.js"></script>
+        <!-- endbuild -->
+        <div id="chart"></div>
+        <button id="update">Update</button>
+    </body>
+<script>
+
+
+var sourceData = _(data.report.items[0].sources).find(function (d) {
+            return d.name == "counter";
+        }).by_month
+
+var html = _(sourceData).map(function (d) {
+    var date = new (Function.prototype.bind.apply(
+        Date, [null].concat([d.year, d.month])
+    ))
+    return { time: date, views: d.html }
+}).value()
+
+var pdf = _(sourceData).map(function (d) {
+    var date = new (Function.prototype.bind.apply(
+        Date, [null].concat([d.year, d.month])
+    ))
+    return { time: date, views: d.pdf }
+}).value()
+
+var preparedData = {
+    html: html,
+    pdf: pdf,
+    url: data.report.items[0].canonical_url,
+    journal: data.report.items[0].journal,
+    title: data.report.items[0].title
+}
+
+// And then configure the chart.
+var line = new LineChart;
+
+line.create($("#chart")[0], {
+    width: 1000,
+    height: 600,
+    x: "time",
+    y: "views",
+    lines: ["html", "pdf"],
+    category: "journal",
+    tooltip: "title"
+}, preparedData);
+
+$("#update").click(function () {
+    console.log('clicked');
+    preparedData = _.map(preparedData, function (d) {
+        d.months = d.months + 1;
+        d.views = d.views + 1000;
+        d.citations = Math.random() * 100;
+        return d;
+    });
+
+    line.update({
+        width: 1000,
+        height: 600,
+        x: "time",
+        y: "views",
+        radius: "citations",
+        category: "journal",
+        tooltip: "title"
+    }, preparedData);
+});
+
+</script>
+</html>
