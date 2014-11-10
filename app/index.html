@@ -24,7 +24,7 @@
 <script>
 
 
-var sourceData = _(data.report.items[0].sources).find(function (d) {
+var sourceData = _(sampleData.report.items[0].sources).find(function (d) {
             return d.name == "counter";
         }).by_month
 
@@ -45,9 +45,9 @@ var pdf = _(sourceData).map(function (d) {
 var preparedData = {
     html: html,
     pdf: pdf,
-    url: data.report.items[0].canonical_url,
-    journal: data.report.items[0].journal,
-    title: data.report.items[0].title
+    url: sampleData.report.items[0].canonical_url,
+    journal: sampleData.report.items[0].journal,
+    title: sampleData.report.items[0].title
 }
 
 // And then configure the chart.
@@ -65,19 +65,15 @@ line.create($("#chart")[0], {
 
 $("#update").click(function () {
     console.log('clicked');
-    preparedData = _.map(preparedData, function (d) {
-        d.months = d.months + 1;
-        d.views = d.views + 1000;
-        d.citations = Math.random() * 100;
-        return d;
-    });
+    preparedData.html = _.map(preparedData.html, function (d) { return {time: d.time,  views: Math.random() * 2000}});
+    preparedData.pdf = _.map(preparedData.pdf, function (d) { return {time: d.time,  views: Math.random() * 1000}});
 
     line.update({
         width: 1000,
         height: 600,
         x: "time",
         y: "views",
-        radius: "citations",
+        lines: ["html", "pdf"],
         category: "journal",
         tooltip: "title"
     }, preparedData);

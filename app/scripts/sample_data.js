@@ -1,4 +1,4 @@
-var data = {
+var sampleData = {
   "report": {
     "total": 50,
     "total_pages": 1,

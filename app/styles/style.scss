@@ -10,8 +10,10 @@ text {
   font: 10px sans-serif;
 }
 
-.bubble {
-  stroke: #000;
+.circle {
+  // stroke: #000;
+  stroke-width: 2px;
+  fill: transparent;
 }
 
 .axis path, .axis line {
@@ -22,6 +24,14 @@ text {
 
 .label {
   fill: #777;
+}
+
+.series0 {
+  stroke: red;
+}
+
+.series1 {
+  stroke: green;
 }
 
 .year.label {
@@ -41,7 +51,7 @@ text {
 
 .line {
   fill: none;
-  stroke: steelblue;
+  // stroke: steelblue;
   stroke-width: 1.5px;
 }
 

@@ -1,4 +1,6 @@
-var LineChart = function() {};
+var LineChart = function() {
+    _.bindAll(this);
+};
 
 LineChart.prototype.create = function(el, properties, data) {
     this.svg = d3.select(el).append('svg')
@@ -10,12 +12,19 @@ LineChart.prototype.create = function(el, properties, data) {
     this.width = properties.width;
     this.height = properties.height;
     this.margin = {top: 20, right: 20, bottom: 40, left: 40};
-    this.data = data.html;
+
+    this.data = data;
 
     this._setup();
-    this.update();
+    this._draw();
 
     return this;
+}
+
+LineChart.prototype._setSeries = function() {
+    this.series = _.map(this.properties['lines'], function (l) {
+        return this.data[l];
+    }, this);
 }
 
 LineChart.prototype._setAccessors = function() {
@@ -27,51 +36,55 @@ LineChart.prototype._setAccessors = function() {
 
 LineChart.prototype._scales = function() {
     // Scales
-    var xScale = d3.time.scale().range([0, this.w()]);
-    var yScale = d3.scale.linear().range([this.h(), 0]);
-    var radiusScale = d3.scale.sqrt().range([0, 40])
-    var colorScale = d3.scale.category10();
-
-    this.xScale = xScale;
-    this.yScale = yScale;
-    this.colorScale = colorScale;
+    this.xScale = d3.time.scale().range([0, this.w()]);
+    this.yScale = d3.scale.linear().range([this.h(), 0]);
+    this.radiusScale = d3.scale.sqrt().range([0, 40])
+    this.colorScale = d3.scale.category10();
 }
 
 LineChart.prototype._setup  = function () {
+    this._setSeries();
     this._setAccessors();
-    this._scales();
     this._setLabels();
+    this._scales();
 
     // Labels
     this.xAxis = d3.svg.axis().orient("bottom").scale(this.xScale).ticks(12, d3.format(",d"));
     this.yAxis = d3.svg.axis().scale(this.yScale).orient("left");
 
+    this._setDomains();
+
     // Tooltips
     var tooltip = function (d) {
-        return '<strong>' + this.tooltip(d) + '</strong><br>' +
-            this.categoryLabel + ": " + this.category(d) + "<br>" +
+        return '<strong>' + this.tooltip(this.data) + '</strong><br>' +
+            this.categoryLabel + ": " + this.category(this.data) + "<br>" +
             this.xLabel + ": " + this.x(d) + "<br>" +
             this.yLabel + ": " + this.y(d) + "<br>"
     }
 
     var direction = function (d) {
         var upper = this.y(d) > (0.75 * this.yScale.domain()[1])
-        var left = this.x(d) < (0.25 * this.xScale.domain()[1])
-        var right = this.x(d) > (0.75 * this.xScale.domain()[1])
+        if(this.x(d) instanceof Date) {
+            var left = (this.x(d).getTime() - this.xScale.domain()[0].getTime()) < (0.25 * (this.xScale.domain()[1].getTime()-this.xScale.domain()[0].getTime()))
+            var right = (this.x(d).getTime() - this.xScale.domain()[0].getTime()) > (0.75 * (this.xScale.domain()[1].getTime()-this.xScale.domain()[0].getTime()))
+        } else {
+            var left = this.x(d) < (0.25 * this.xScale.domain()[1])
+            var right = this.x(d) > (0.75 * this.xScale.domain()[1])
+        }
 
-        // if(upper && left) {
-        //     return 'se';
-        // } else if (upper && right) {
-        //     return 'sw';
-        // } else if (upper) {
-        //     return 's';
-        // } else if (right) {
-        //     return 'w';
-        // } else if (left) {
-        //     return 'e';
-        // } else {
+        if(upper && left) {
+            return 'se';
+        } else if (upper && right) {
+            return 'sw';
+        } else if (upper) {
+            return 's';
+        } else if (right) {
+            return 'w';
+        } else if (left) {
+            return 'e';
+        } else {
             return 'n';
-        // }
+        }
     }
 
     // Tooltips
@@ -79,24 +92,24 @@ LineChart.prototype._setup  = function () {
 
     this.tip.direction(direction.bind(this));
 
-    var svg = this.svg
+    this.svg = this.svg
         .call(this.tip)
         .append("g")
             .attr("transform", this.transformG());
 
     // Add the x-axis.
-    svg.append("g")
+    this.svg.append("g")
             .attr("class", "x axis")
             .attr("transform", this.transformX())
             .call(this.xAxis);
 
     // Add the y-axis.
-    svg.append("g")
+    this.svg.append("g")
             .attr("class", "y axis")
             .call(this.yAxis);
 
     // Add an x-axis label.
-    svg.append("text")
+    this.svg.append("text")
             .attr("class", "x label")
             .attr("text-anchor", "end")
             .attr("x", this.w())
@@ -104,7 +117,7 @@ LineChart.prototype._setup  = function () {
             .text(this.xLabel);
 
     // Add a y-axis label.
-    svg.append("text")
+    this.svg.append("text")
             .attr("class", "y label")
             .attr("text-anchor", "end")
             .attr("y", 6)
@@ -112,13 +125,17 @@ LineChart.prototype._setup  = function () {
             .attr("transform", "rotate(-90)")
             .text(this.yLabel);
 
-    this.line = svg.append("g")
+    this.lines = this.svg.append("g")
         .attr("class", "lines");
+
+    this.circles = this.svg.append("g")
+        .attr("class", "circles");
 }
 
 LineChart.prototype.update = function(properties, data) {
     this.properties = properties || this.properties;
     this.data = data || this.data;
+    this._setSeries();
     this._setLabels();
     this._setAccessors();
     this._setDomains();
@@ -126,8 +143,13 @@ LineChart.prototype.update = function(properties, data) {
 }
 
 LineChart.prototype._setDomains = function () {
-    this.xScale.domain(d3.extent(this.data, this.x.bind(this)));
-    this.yScale.domain([0, d3.max(this.data, this.y.bind(this))]);
+    this.xScale.domain(d3.extent(this.series[0], this.x.bind(this)));
+    this.yScale.domain([
+        0,
+        d3.max(this.series, function(d) {
+            return d3.max(d, this.y.bind(this))
+        }.bind(this))
+    ]);
 
     this.svg.select('.x.axis').transition().call(this.xAxis);
     this.svg.select('.y.axis').transition().call(this.yAxis);
@@ -160,51 +182,64 @@ LineChart.prototype.transformX = function(){
 }
 
 LineChart.prototype._draw = function() {
+    // Defines series class, e.g. line1
+    var lineSeriesClass = function (d) {
+        return 'line series' + this.series.indexOf(d);
+    }.bind(this);
+    var circleGroupSeriesClass = function (d) {
+        return 'circleGroup series' + this.series.indexOf(d);
+    }.bind(this);
 
-    // Defines fill color
-    var fill = function(d) { return this.colorScale(this.category(d)); }
 
-    var xVal = function(d) { return this.xScale(this.x(d))};
-    var yVal = function(d) { return this.yScale(this.y(d))};
+    var xVal = function (d) { return this.xScale(this.x(d)) }.bind(this);
+    var yVal = function (d) { return this.yScale(this.y(d)) }.bind(this);
+    var tip = this.tip;
     var line = d3.svg.line()
-        .x(xVal.bind(this))
-        .y(yVal.bind(this));
+        .x(xVal)
+        .y(yVal);
 
-    this.line.append("path")
-        .datum(this.data)
-        .attr("class", "line")
-        .attr("d", line)
-        // .on('mouseover', this.tip.show)
-        // .on('mouseout', this.tip.hide)
+    var lines = this.lines.selectAll('.line')
+        .data(this.series)
 
-    this.line.selectAll(".circle")
-         .data(this.data)
-         .enter()
-         .append("svg:circle")
-         .attr("class", "circle")
-         .attr("cx", xVal.bind(this))
-         .attr("cy", yVal.bind(this))
-         .attr("r", 5)
-         .on('mouseover', this.tip.show)
-         .on('mouseout', this.tip.hide)
+    lines.enter()
+        .append('path')
+        .attr('class', lineSeriesClass)
+        .attr('d', line)
 
-    // bubbles.enter().append("circle")
-    //     .attr("class", "bubble")
-    //     .style("fill", fill.bind(this))
-    //     .call(position.bind(this))
-    //     .on('mouseover', this.tip.show)
-    //     .on('mouseout', this.tip.hide)
-    //     .on('click', function (d) {
-    //         window.location = d.url;
-    //     });
+    lines.transition()
+        .attr('d', line)
 
-        // .append("title")
-        //   .text(this.category) // Titles
+    var circleGroup = function(data) {
+        var group = d3.select(this)
+            .selectAll('.circle')
+            .data(data)
 
-    // bubbles.transition()
-    //     .call(position.bind(this))
+        group.enter()
+            .append('circle')
+                .attr('class', 'circle')
+                .attr('cx', xVal)
+                .attr('cy', yVal)
+                .attr('r', 5)
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
 
-    // bubbles.exit().remove();
+        group.transition()
+            .attr("cx", xVal)
+            .attr("cy", yVal)
+
+    };
+
+    var circles = this.circles.selectAll('.circleGroup')
+        .data(this.series)
+
+    circles
+        .enter()
+        .append('g')
+        .attr('class', 'circleGroup')
+        .attr('class', circleGroupSeriesClass)
+        .each(circleGroup)
+
+    circles.transition().each(circleGroup);
 }
 
 LineChart.prototype.destroy = function(el) {
