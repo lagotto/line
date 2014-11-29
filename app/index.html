@@ -4,19 +4,21 @@
         <meta charset="utf-8">
         <title>Line</title>
 
-        <!-- build:css styles/main.css -->
+
         <link rel="stylesheet" href="styles/style.css">
-        <!-- endbuild -->
+
     </head>
     <body>
         <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
-        <script src="bower_components/d3/d3.js"></script>
-        <script src="bower_components/jquery/dist/jquery.js"></script>
-        <script src="scripts/sample_data.js"></script>
+        <!-- build:js(app) scripts/deps.js -->
+            <script src="bower_components/d3/d3.js"></script>
+            <script src="bower_components/d3-tip/index.js"></script>
+            <script src="bower_components/jquery/dist/jquery.js"></script>
+            <script src="scripts/sample_data.js"></script>
+        <!-- endbuild -->
 
         <!-- build:js(app) scripts/line_chart.js -->
-        <script src="bower_components/d3-tip/index.js"></script>
-        <script src="scripts/line_chart.js"></script>
+            <script src="scripts/line_chart.js"></script>
         <!-- endbuild -->
         <div id="chart"></div>
         <button id="update">Update</button>

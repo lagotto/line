@@ -130,6 +130,28 @@ LineChart.prototype._setup  = function () {
 
     this.circles = this.svg.append("g")
         .attr("class", "circles");
+
+    var legend = this.svg.append('g')
+        .attr('class', 'legend')
+            .selectAll('g')
+            .data(this.series)
+            .enter()
+            .append('g')
+
+    legend.append('rect')
+        .attr('x', this.width - 20)
+        .attr('y', function(d, i){ return i *  20;})
+        .attr('width', 10)
+        .attr('height', 10)
+        .style('fill', function(d) {
+          return "#000";
+        });
+
+    legend.append('text')
+        .attr('x', this.width - 8)
+        .attr('y', function(d, i){ return (i *  20) + 9;})
+        .text(function(d){ return this.series.indexOf(d) }.bind(this));
+
 }
 
 LineChart.prototype.update = function(properties, data) {
