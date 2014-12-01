@@ -22,7 +22,7 @@ LineChart.prototype.create = function(el, properties, data) {
 }
 
 LineChart.prototype._setSeries = function() {
-    this.series = _.map(this.properties['lines'], function (l) {
+    this.series = _.map(this.properties.lines, function (l) {
         return this.data[l];
     }, this);
 }
@@ -39,7 +39,14 @@ LineChart.prototype._scales = function() {
     this.xScale = d3.time.scale().range([0, this.w()]);
     this.yScale = d3.scale.linear().range([this.h(), 0]);
     this.radiusScale = d3.scale.sqrt().range([0, 40])
-    this.colorScale = d3.scale.category10();
+
+    if(this.properties.colors) {
+        this.colorScale = d3.scale.ordinal()
+            .domain(this.properties.lines.length)
+            .range(this.properties.colors)
+    } else {
+        this.colorScale = d3.scale.category10();
+    }
 }
 
 LineChart.prototype._setup  = function () {
@@ -51,6 +58,9 @@ LineChart.prototype._setup  = function () {
     // Labels
     this.xAxis = d3.svg.axis().orient("bottom").scale(this.xScale).ticks(12, d3.format(",d"));
     this.yAxis = d3.svg.axis().scale(this.yScale).orient("left");
+
+    // Colors
+    this.color = function (d) { return this.colorScale(this.series.indexOf(d)) }.bind(this);
 
     this._setDomains();
 
@@ -131,26 +141,29 @@ LineChart.prototype._setup  = function () {
     this.circles = this.svg.append("g")
         .attr("class", "circles");
 
-    var legend = this.svg.append('g')
+    this.legend = this.svg.append('g')
         .attr('class', 'legend')
             .selectAll('g')
             .data(this.series)
             .enter()
             .append('g')
 
-    legend.append('rect')
-        .attr('x', this.width - 20)
-        .attr('y', function(d, i){ return i *  20;})
-        .attr('width', 10)
-        .attr('height', 10)
-        .style('fill', function(d) {
-          return "#000";
-        });
+    this.legend.append('circle')
+        .attr('cx', this.width - 150)
+        .attr('cy', function(d, i){ return this.margin.top + i * 20;}.bind(this))
+        .attr('r', 5)
+        .style('fill', this.color)
 
-    legend.append('text')
-        .attr('x', this.width - 8)
-        .attr('y', function(d, i){ return (i *  20) + 9;})
-        .text(function(d){ return this.series.indexOf(d) }.bind(this));
+    this.legend.append('text')
+        .attr('alignment-baseline', 'middle')
+        .attr('x', this.width - 140)
+        .attr('y', function(d, i){ return this.margin.top + i * 20}.bind(this))
+        .text(function(d){
+            var label = this.properties.lines[this.series.indexOf(d)];
+            label = label.charAt(0).toUpperCase() + label.slice(1) +
+                ' ' + this.yLabel;
+            return label;
+        }.bind(this));
 
 }
 
@@ -225,7 +238,8 @@ LineChart.prototype._draw = function() {
 
     lines.enter()
         .append('path')
-        .attr('class', lineSeriesClass)
+        .attr('stroke', this.color)
+        .attr('class', 'line')
         .attr('d', line)
 
     lines.transition()
@@ -241,7 +255,7 @@ LineChart.prototype._draw = function() {
                 .attr('class', 'circle')
                 .attr('cx', xVal)
                 .attr('cy', yVal)
-                .attr('r', 5)
+                .attr('r', 3)
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide);
 
@@ -258,6 +272,8 @@ LineChart.prototype._draw = function() {
         .enter()
         .append('g')
         .attr('class', 'circleGroup')
+        .attr('stroke', this.color)
+        .attr('fill', this.color)
         .attr('class', circleGroupSeriesClass)
         .each(circleGroup)
 

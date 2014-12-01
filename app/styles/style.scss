@@ -3,7 +3,7 @@ html, body {
     margin: 30px 0;
 }
 
-text {
+text, body {
   font: 10px sans-serif;
 }
 
@@ -15,14 +15,6 @@ text {
 
 .label {
   fill: #777;
-}
-
-.series0 {
-  stroke: red;
-}
-
-.series1 {
-  stroke: green;
 }
 
 .year.label {
