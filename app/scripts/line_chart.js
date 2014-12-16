@@ -11,7 +11,7 @@ LineChart.prototype.create = function(el, properties, data) {
     this.properties = properties;
     this.width = properties.width;
     this.height = properties.height;
-    this.margin = {top: 20, right: 20, bottom: 40, left: 40};
+    this.margin = {top: 20, right: 20, bottom: 100, left: 80};
 
     this.data = data;
 
@@ -68,8 +68,8 @@ LineChart.prototype._setup  = function () {
     var tooltip = function (d) {
         return '<strong>' + this.tooltip(this.data) + '</strong><br>' +
             this.categoryLabel + ": " + this.category(this.data) + "<br>" +
-            this.xLabel + ": " + this.x(d) + "<br>" +
-            this.yLabel + ": " + this.y(d) + "<br>"
+            this.properties.xLabel + ": " + d3.time.format("%B %Y")(this.x(d)) + "<br>" +
+            this.properties.yLabel + ": " + this.y(d) + "<br>"
     }
 
     var direction = function (d) {
@@ -102,6 +102,24 @@ LineChart.prototype._setup  = function () {
 
     this.tip.direction(direction.bind(this));
 
+    // Add an x-axis label.
+    this.svg.append("text")
+            .attr("class", "x label")
+            .attr("text-anchor", "middle")
+            .attr("x", this.w() / 2 + this.margin.left)
+            .attr("y", this.height - (this.margin.bottom / 2))
+            .text(this.properties.xLabel);
+
+    // Add a y-axis label.
+    this.svg.append("text")
+            .attr("class", "y label")
+            .attr("text-anchor", "middle")
+            .attr("y", 0)
+            .attr("x", 0 - this.h() / 2)
+            .attr("dy", "0.75em")
+            .attr("transform", "rotate(-90)")
+            .text(this.properties.yLabel);
+
     this.svg = this.svg
         .call(this.tip)
         .append("g")
@@ -118,23 +136,6 @@ LineChart.prototype._setup  = function () {
             .attr("class", "y axis")
             .call(this.yAxis);
 
-    // Add an x-axis label.
-    this.svg.append("text")
-            .attr("class", "x label")
-            .attr("text-anchor", "end")
-            .attr("x", this.w())
-            .attr("y", this.h() - 6)
-            .text(this.xLabel);
-
-    // Add a y-axis label.
-    this.svg.append("text")
-            .attr("class", "y label")
-            .attr("text-anchor", "end")
-            .attr("y", 6)
-            .attr("dy", ".75em")
-            .attr("transform", "rotate(-90)")
-            .text(this.yLabel);
-
     this.lines = this.svg.append("g")
         .attr("class", "lines");
 
@@ -149,19 +150,19 @@ LineChart.prototype._setup  = function () {
             .append('g')
 
     this.legend.append('circle')
-        .attr('cx', this.width - 150)
+        .attr('cx', this.width - 200)
         .attr('cy', function(d, i){ return this.margin.top + i * 20;}.bind(this))
-        .attr('r', 5)
+        .attr('r', 7)
         .style('fill', this.color)
 
     this.legend.append('text')
         .attr('alignment-baseline', 'middle')
-        .attr('x', this.width - 140)
+        .attr('x', this.width - 180)
         .attr('y', function(d, i){ return this.margin.top + i * 20}.bind(this))
         .text(function(d){
             var label = this.properties.lines[this.series.indexOf(d)];
             label = label.charAt(0).toUpperCase() + label.slice(1) +
-                ' ' + this.yLabel;
+                ' ' + this.properties.yLabel;
             return label;
         }.bind(this));
 
@@ -195,8 +196,6 @@ LineChart.prototype._setLabels = function() {
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    this.xLabel = capitalise(this.properties.x);
-    this.yLabel = capitalise(this.properties.y);
     this.categoryLabel = capitalise(this.properties.category);
 }
 

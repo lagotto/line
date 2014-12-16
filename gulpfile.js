@@ -11,7 +11,6 @@ var plumber = require('gulp-plumber');
 var gutil = require('gulp-util');
 var browserSync = require('browser-sync');
 var usemin = require('gulp-usemin');
-var notify = require('gulp-notify');
 
 // error function for plumber
 var onError = function (err) {
@@ -50,7 +49,6 @@ gulp.task('css', function() {
     .pipe(sass({ style: 'expanded', }))
     .pipe(gulp.dest('./dist/styles/'))
     .pipe(gulp.dest('./dist/styles/'))
-    .pipe(notify({ message: 'Styles task complete' }));
 });
 
 gulp.task('jslint', function() {
@@ -59,7 +57,6 @@ gulp.task('jslint', function() {
     .pipe(jshint())
     .pipe(jshint.reporter('default'))
     .pipe(jshint.reporter('fail'))
-    .pipe(notify({ message: 'Lint task complete' }));
 });
 
 gulp.task('usemin', function () {
@@ -75,7 +72,6 @@ gulp.task('scripts', function() {
   return gulp.src('./app/scripts/*.js')
     // .pipe(uglify())
     .pipe(gulp.dest('./dist/scripts'))
-    .pipe(notify({ message: 'Scripts task complete' }));
 });
 
 // Watch task

@@ -28,25 +28,33 @@
 
 var sourceData = _(sampleData.report.items[0].sources).find(function (d) {
             return d.name == "counter";
-        }).by_month
+        }).events
 
 var html = _(sourceData).map(function (d) {
     var date = new (Function.prototype.bind.apply(
         Date, [null].concat([d.year, d.month])
     ))
-    return { time: date, views: d.html }
+    return { time: date, views: +d.html_views }
 }).value()
 
 var pdf = _(sourceData).map(function (d) {
     var date = new (Function.prototype.bind.apply(
         Date, [null].concat([d.year, d.month])
     ))
-    return { time: date, views: d.pdf }
+    return { time: date, views: +d.pdf_views }
+}).value()
+
+var xml = _(sourceData).map(function (d) {
+    var date = new (Function.prototype.bind.apply(
+        Date, [null].concat([d.year, d.month])
+    ))
+    return { time: date, views: +d.xml_views }
 }).value()
 
 var preparedData = {
     html: html,
     pdf: pdf,
+    xml: xml,
     url: sampleData.report.items[0].canonical_url,
     journal: sampleData.report.items[0].journal,
     title: sampleData.report.items[0].title
@@ -59,8 +67,10 @@ line.create($("#chart")[0], {
     width: 1000,
     height: 600,
     x: "time",
+    xLabel: "Date",
     y: "views",
-    lines: ["html", "pdf"],
+    yLabel: "Views",
+    lines: ["html", "pdf", "xml"],
     category: "journal",
     tooltip: "title",
     colors: ['#fda328',
