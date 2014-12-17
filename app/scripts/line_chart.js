@@ -161,8 +161,7 @@ LineChart.prototype._setup  = function () {
         .attr('y', function(d, i){ return this.margin.top + i * 20}.bind(this))
         .text(function(d){
             var label = this.properties.lines[this.series.indexOf(d)];
-            label = label.charAt(0).toUpperCase() + label.slice(1) +
-                ' ' + this.properties.yLabel;
+            label = label + ' ' + this.properties.yLabel;
             return label;
         }.bind(this));
 
