@@ -11,7 +11,7 @@ LineChart.prototype.create = function(el, properties, data) {
     this.properties = properties;
     this.width = properties.width;
     this.height = properties.height;
-    this.margin = {top: 20, right: 20, bottom: 100, left: 80};
+    this.margin = {top: 40, right: 20, bottom: 100, left: 60};
 
     this.data = data;
 
@@ -115,9 +115,8 @@ LineChart.prototype._setup  = function () {
             .attr("class", "y label")
             .attr("text-anchor", "middle")
             .attr("y", 0)
-            .attr("x", 0 - this.h() / 2)
-            .attr("dy", "0.75em")
-            .attr("transform", "rotate(-90)")
+            .attr("x", this.margin.left)
+            .attr("dy", "1.5em")
             .text(this.properties.yLabel);
 
     this.svg = this.svg
